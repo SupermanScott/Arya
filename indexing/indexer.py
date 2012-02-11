@@ -2,11 +2,12 @@
 import readability.readability as readability
 import urllib
 import re
+import pymongo
 
 # Probably should leverage lxml or BS to really strip tags to get the text
 STRIP_HTML = re.compile(r'<[^<]*?/?>')
 
-class Indexer(object):
+class DocumentFetcher(object):
     """
     Maps a given url to a dictionary of fields and raw text
     """
@@ -49,7 +50,7 @@ class Indexer(object):
 
     document = property(get_document, "Document at the provided url")
 
-    def to_dictionary(self)
+    def to_dictionary(self):
         """
         Returns itself as a dictionary
         """
@@ -59,3 +60,32 @@ class Indexer(object):
             summary=self.summary,
             content=self.content,
             )
+
+class Indexer(object):
+    """
+    Defines how to save the documents to Mongo
+    """
+
+    def __init__(self, server='localhost', port=27017, database_name='arya',
+                 collection_name='index'):
+        """
+        Connect to mongo and connect to the proper collection.
+        """
+        connection = pymongo.Connection(server, port)
+        self.collection = connection[database_name][collection_name]
+
+        # @TODO provide a way to add a config object for how the fields are
+        # tokenized etc.
+
+    def add_document(self, document):
+        """
+        Adds a document to the search index.
+        """
+        doc = dict(document)
+        print document
+
+    def index_url(self, url):
+        """
+        Index a provided url
+        """
+        self.add_document(DocumentFetcher(url).to_dictionary())
