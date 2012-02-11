@@ -7,3 +7,4 @@ distribute*
 *.DS_Store
 .Python
 local
+share/
