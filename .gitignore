@@ -1,0 +1,9 @@
+*.pyc
+bin/
+lib/
+include/
+*.egg-info
+distribute*
+*.DS_Store
+.Python
+local
