@@ -48,4 +48,14 @@ class Indexer(object):
         return self._document
 
     document = property(get_document, "Document at the provided url")
-        
+
+    def to_dictionary(self)
+        """
+        Returns itself as a dictionary
+        """
+        return dict(
+            url=self.url,
+            title=self.title,
+            summary=self.summary,
+            content=self.content,
+            )
