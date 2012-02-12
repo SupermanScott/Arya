@@ -40,7 +40,7 @@ class Searcher(object):
             "  for (var i=0; i < this.matches.length; i++) {"
             "    var match = this.matches[i];"
             "    var data = {tf: match.term_fq, df: this.document_fq};"
-            "    emit(this.matches[i], data);"
+            "    emit(this.matches[i].doc_id, data);"
             "  }}")
 
         reduce_function = bson.Code(
