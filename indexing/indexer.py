@@ -101,6 +101,7 @@ class Indexer(object):
 
         document_id = self.document_storage.save(doc)
         processed_tokens = {}
+        terms_added = set()
 
         for field_name in self.text_fields:
             for token in self.tokenizer(doc.get(field_name, '')):
@@ -127,7 +128,8 @@ class Indexer(object):
                             update_match = match
                             break
                 if exists and not is_update:
-                    exists['document_fq'] += 1
+                    if term not in terms_added:
+                        exists['document_fq'] += 1
                     exists['matches'].append(match_object)
                     self.collection.save(exists)
 
@@ -137,6 +139,7 @@ class Indexer(object):
                         matches=[match_object],
                         document_fq=1)
                     self.collection.save(term_document)
+                terms_added.add(term)
 
     def index_url(self, url):
         """
