@@ -1,6 +1,7 @@
 chardet==1.0.1
 distribute==0.6.19
+feedparser==5.1
+lxml==2.3.3
 pymongo==2.1.1
 readability-lxml==0.2.3
-tornado==2.2
 wsgiref==0.1.2
