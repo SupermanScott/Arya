@@ -4,6 +4,9 @@ import urllib
 import re
 import pymongo
 
+import tokens
+import analyzers
+
 # Probably should leverage lxml or BS to really strip tags to get the text
 STRIP_HTML = re.compile(r'<[^<]*?/?>')
 
@@ -67,25 +70,79 @@ class Indexer(object):
     """
 
     def __init__(self, server='localhost', port=27017, database_name='arya',
-                 collection_name='index'):
+                 collection_name='index', document_storage='docs'):
         """
         Connect to mongo and connect to the proper collection.
         """
         connection = pymongo.Connection(server, port)
         self.collection = connection[database_name][collection_name]
+        self.document_storage = connection[database_name][document_storage]
 
         # @TODO provide a way to add a config object for how the fields are
         # tokenized etc.
+        # Only one tokenizer
+        self.tokenizer = tokens.whitespace_tokenizer
+        # Several analyzers. For instance, stemmer, bi grams, stop words...
+        self.analyzers = (
+            analyzers.porter_stemer,)
+
+
+        self.text_fields = (
+            'title',
+            'content',
+            )
 
     def add_document(self, document):
         """
         Adds a document to the search index.
         """
         doc = dict(document)
-        print document
+        is_update = '_id' in doc
+
+        document_id = self.document_storage.save(doc)
+        processed_tokens = {}
+
+        for field_name in self.text_fields:
+            for token in self.tokenizer(doc.get(field_name, '')):
+                original_word = token
+                for analyzer in self.analyzers:
+                    token = analyzer(token)
+                processed_tokens[token] = processed_tokens.get(token, 0) + 1
+
+            for token, frequency in processed_tokens.iteritems():
+                match_object = dict(
+                    doc_id=document_id,
+                    field_name=field_name,
+                    original_word=original_word,
+                    term_fq=frequency)
+
+                exists = self.collection.find_one(dict(term=token))
+                update_match = {}
+                if exists and is_update:
+                    for match in exists['matches']:
+                        # This document is already in the reverse index.
+                        if match.get('doc_id', '') == document_id and \
+                                match.get('field_name', '') == field_name:
+                            # @TODO: Remove this and replace with match_object
+                            update_match = match
+                            break
+                if exists and not is_update:
+                    exists['document_fq'] += 1
+                    exists['matches'].append(match_object)
+                    self.collection.save(exists)
+
+                else:
+                    term_document = dict(
+                        term=token,
+                        matches=[match_object],
+                        document_fq=1)
+                    self.collection.save(term_document)
 
     def index_url(self, url):
         """
         Index a provided url
         """
-        self.add_document(DocumentFetcher(url).to_dictionary())
+        document = self.document_storage.find_one(dict(url=url))
+        if not document:
+            document = DocumentFetcher(url).to_dictionary()
+        self.add_document(document)
