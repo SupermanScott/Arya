@@ -25,7 +25,7 @@ class Searcher(object):
         self.analyzers = (
             analyzers.porter_stemer,)
 
-    def search(self, query, offest=0, limit=10):
+    def search(self, query, offset=0, limit=10):
         """
         Executes basic query against index across all searchable text fields
         """
@@ -56,7 +56,7 @@ class Searcher(object):
         finalize_function = bson.Code(
             "function (key, value) {"
             "  var score = value.tf * Math.log(total / value.df);"
-            "  return value.df;"
+            "  return score;"
             "}")
 
         total = self.document_storage.count()
@@ -70,5 +70,8 @@ class Searcher(object):
             scope=scope,
             query={'term': { '$in': list(terms)}},
             out=bson.son.SON(dict(inline=1)))
-        return results['results']
+        return sorted(
+            results['results'],
+            key=lambda x: x['value'],
+            reverse=True)[offset:limit]
 
