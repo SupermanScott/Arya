@@ -70,8 +70,11 @@ class Searcher(object):
             scope=scope,
             query={'term': { '$in': list(terms)}},
             out=bson.son.SON(dict(inline=1)))
-        return sorted(
+        scored_results = sorted(
             results['results'],
             key=lambda x: x['value'],
             reverse=True)[offset:limit]
 
+        return [
+            {'document':self.document_storage.find_one(r['_id']), 
+             'score': r['value']} for r in scored_results]
