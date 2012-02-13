@@ -139,7 +139,11 @@ class Indexer(object):
                         matches=[match_object],
                         document_fq=1)
                     self.collection.save(term_document)
-                terms_added.add(term)
+                terms_added.add(token)
+
+        # Store the terms_added on the document
+        doc['terms'] = list(terms_added)
+        self.document_storage.save(doc)
 
     def index_url(self, url):
         """
