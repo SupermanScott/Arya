@@ -100,10 +100,10 @@ class Indexer(object):
         is_update = '_id' in doc
 
         document_id = self.document_storage.save(doc)
-        processed_tokens = {}
         terms_added = set()
 
         for field_name in self.text_fields:
+            processed_tokens = {}
             for token in self.tokenizer(doc.get(field_name, '')):
                 original_word = token
                 for analyzer in self.analyzers:
