@@ -131,7 +131,7 @@ class Indexer(object):
                             update_match = match
                             break
                 if exists and not is_update:
-                    if term not in terms_added:
+                    if token not in terms_added:
                         exists['document_fq'] += 1
                     exists['matches'].append(match_object)
                     self.collection.save(exists)
