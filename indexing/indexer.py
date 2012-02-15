@@ -2,6 +2,7 @@
 import readability.readability as readability
 import urllib
 import re
+import copy
 import pymongo
 
 import tokens
@@ -101,20 +102,22 @@ class Indexer(object):
 
         document_id = self.document_storage.save(doc)
         terms_added = set()
+        original_tokens = {}
 
         for field_name in self.text_fields:
             processed_tokens = {}
             for token in self.tokenizer(doc.get(field_name, '')):
-                original_word = token
+                original_word = copy.copy(token)
                 for analyzer in self.analyzers:
                     token = analyzer(token)
                 processed_tokens[token] = processed_tokens.get(token, 0) + 1
+                original_tokens[token] = original_word
 
             for token, frequency in processed_tokens.iteritems():
                 match_object = dict(
                     doc_id=document_id,
                     field_name=field_name,
-                    original_word=original_word,
+                    original_word=original_tokens[token],
                     term_fq=frequency)
 
                 exists = self.collection.find_one(dict(term=token))
