@@ -25,5 +25,3 @@ With that installed you are now ready to interact with it via the python console
 >>> idx.index_url('http://www.mongodb.org/display/DOCS/Use+Cases')
 >>> [(x['document']['title'], x['score']) for x in s.Searcher().search('cloud')]
 >>> [(x['document']['title'], x['score']) for x in s.Searcher().search('database power')]
-
-
