@@ -123,14 +123,14 @@ class Indexer(object):
                 exists = self.collection.find_one(dict(term=token))
                 update_match = {}
                 if exists and is_update:
-                    for match in exists['matches']:
-                        # This document is already in the reverse index.
-                        if match.get('doc_id', '') == document_id and \
-                                match.get('field_name', '') == field_name:
-                            # @TODO: Remove this and replace with match_object
-                            update_match = match
-                            break
-                if exists and not is_update:
+                    exists['matches'] = [match for match in exists['matches']
+                                         if match['doc_id'] != document_id and \
+                                             match['field_name'] != field_name]
+
+                    exists['matches'].append(match_object)
+                    self.collection.save(exists)
+
+                elif exists and not is_update:
                     if token not in terms_added:
                         exists['document_fq'] += 1
                     exists['matches'].append(match_object)
